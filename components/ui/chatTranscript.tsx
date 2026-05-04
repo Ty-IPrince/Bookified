@@ -16,17 +16,7 @@ const ChatTranscript = ({
   currentMessage = '',
 }: TranscriptProps) => {
   const isEmpty = messages.length === 0 && !currentMessage && !currentUserMessage
-  const bottomRef = useRef<HTMLDivElement | null>(null)
 
-useEffect(() => {
-  if (!bottomRef.current) return;
-
-  bottomRef.current.scrollIntoView({
-    behavior: messages.length > 0 ? 'smooth' : 'auto',
-  });
-  console.log(messages , currentMessage , currentUserMessage)
-}, [messages, currentMessage, currentUserMessage]);
-  
   if (isEmpty) {
     return (
       <div className="vapi-transcript-wrapper bg-white rounded-2xl p-12 shadow-soft-md min-h-[380px] flex items-center justify-center">
@@ -81,8 +71,6 @@ useEffect(() => {
         </div>
       )}
 
-      {/* scroll anchor */}
-      <div ref={bottomRef} />
     </div>
   )
 }
