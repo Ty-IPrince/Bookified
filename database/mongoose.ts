@@ -20,17 +20,18 @@ let Cached = global.mongooseCache || (global.mongooseCache = { conn: null, promi
 export const connectToDatabase = async () => {
     if(Cached.conn) return Cached.conn;
 
-    if(!Cached.promise) {
-        Cached.promise = mongoose.connect(MONGODB_URI , { bufferCommands : false})
+  if (!Cached.promise) {
+    Cached.promise = mongoose.connect(MONGODB_URI , {
+      bufferCommands: false,
+    });
+  }
 
-        try {
-            Cached.conn = await Cached.promise;
-            return Cached.conn;
-        } catch (error) {
-            Cached.promise = null;
-            throw error;
-        }
-    }
-    console.info('Connecting to database...');
-    return Cached.conn
-}
+  try {
+    Cached.conn = await Cached.promise;
+  } catch (error) {
+    Cached.promise = null;
+    throw error;
+  }
+
+  return Cached.conn;
+};

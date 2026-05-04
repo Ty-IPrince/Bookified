@@ -1,3 +1,6 @@
+'use client'
+import { useAuth } from "@clerk/nextjs";
+
 // Brand color - used in JS files where CSS variables aren't available
 export const BRAND_COLOR = '#212a3b'; // Dark blue-gray
 export const BRAND_COLOR_HOVER = '#3d485e'; // Medium blue-gray
