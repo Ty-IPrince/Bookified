@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cn } from "@/lib/utils";
 import { ClerkProvider } from "@clerk/nextjs";
 import { IBM_Plex_Serif, Mona_Sans } from "next/font/google";
+import "./globals.css";
 import { Toaster } from "@/components/ui/sonner"
 import Navbar from "@/components/ui/navbar";
 
@@ -29,7 +30,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider ui={ui}>
+    <ClerkProvider  appearance={{
+    variables: {
+      colorPrimary: "#663820",
+    },
+  }}>
       <html
         lang="en"
         className={cn("h-full", "antialiased", ibmPlexSerif.variable, monaSans.variable, "font-sans", "relative")}
