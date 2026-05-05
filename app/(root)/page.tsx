@@ -1,14 +1,15 @@
 import React from 'react'
 import HeroSection from '@/components/ui/heroSection'
-import { sampleBooks } from '@/lib/constants'
 import BookCard from '@/components/ui/bookCard'
 import { getAllbooks } from '@/lib/actions/book.actions'
+import { IBook } from '@/types'
+
 
 const page = async () => {
 
   const bookresult = await getAllbooks();
   console.log(bookresult)
-  const books = bookresult.success ? bookresult.data ?? []: [];
+  const books: IBook[] = bookresult.success ? (bookresult.data as unknown as IBook[]) ?? []: [];
   console.log(books)
 
   return (

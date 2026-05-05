@@ -6,18 +6,25 @@ import { escapeRegex, genrateslug, serializedata } from "@/lib/utils";
 import Book from "@/database/models/book.model";
 import BookSegment from "@/database/models/bookSegment.model";
 import mongoose from "mongoose";
+import { auth } from "@clerk/nextjs/server";
 
 
-export const getAllbooks = async()=>{
+export const getAllbooks = async () => {
     try {
         await connectToDatabase();
+        const { userId } = await auth();
+            if (!userId) {
+                return serializedata({ success: false, data: [], error: "Not authenticated" });
+            }
+        const query = { clerkId: userId };
 
-        const books = await Book.find().sort({ createdAt: -1 }).lean();
+
+        const books = await Book.find(query).sort({ createdAt: -1 }).lean();
         return serializedata({ success: true, data: books.map(serializedata) });
-        
-    }catch(e){
+
+    } catch (e) {
         console.error("Error fetching books:", e);
-        return serializedata({ success: false, data : [],error: e });
+        return serializedata({ success: false, data: [], error: e });
     }
 }
 
@@ -116,7 +123,11 @@ export const getbookbyslug = async (slug: string) => {
     try {
         await connectToDatabase();
 
-        const book = await Book.findOne({ slug }).lean();
+        const { userId } = await auth();
+        const query = { clerkId: userId };
+
+        const books = await Book.find(query).sort({ createdAt: -1 }).lean();
+        const book = await books.find((b) => b.slug === slug);
 
         if (!book) {
             return serializedata({ success: false, error: "Book not found" ,data : '' });
