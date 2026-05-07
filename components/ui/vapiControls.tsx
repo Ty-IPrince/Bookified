@@ -20,13 +20,13 @@ const VapiControls = ({ book }: { book: IBook }) => {
     <main className="book-page-container">
       <div className="wrapper">
         {/* 📘 Book Header */}
-        <section className="bg-[#f3e4c7] rounded-2xl p-6 md:p-8 shadow-soft mb-8">
+        <section className="bg-[#f3e4c7] rounded-2xl p-3 md:p-4 shadow-soft mb-8">
           <div className="flex items-center gap-6">
             <div className="relative w-[120px] h-[170px]">
               <img
                 src={cover}
                 alt={book.title}
-                className="w-full h-full object-cover rounded-lg"
+                className="w-[90%] h-[90%] object-cover rounded-lg"
               />
 
               {/* 🎤 Voice Button */}
@@ -68,7 +68,7 @@ const VapiControls = ({ book }: { book: IBook }) => {
             </div>
           </div>
         </section>
-        <section className="bg-white rounded-2xl p-12 shadow-soft-md min-h-[380px]">
+        <section className="bg-white rounded-2xl p-8 shadow-soft-md min-h-[380px]">
           <div className="w-full">
             <ChatTranscript
               messages={messages}

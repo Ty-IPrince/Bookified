@@ -87,7 +87,6 @@ const UploadForm = () => {
     }
     if (userId) {
       try {
-        console.log('Form submitted', data)
 
         const existCheck = await checkBookExists(data.title)
 

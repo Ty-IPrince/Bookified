@@ -7,9 +7,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     
     try {
         const body = (await request.json()) as HandleUploadBody;
-    
-        console.log('[uploads] incoming request:', { method: request.method, url: (request as any).url, body });
-        
+            
         const response = await handleUpload({
             token: process.env.BLOB_READ_WRITE_TOKEN,
             body,
@@ -35,7 +33,6 @@ export async function POST(request: Request): Promise<NextResponse> {
                 };
             },
             onUploadCompleted: async ({ blob, tokenPayload }) => {
-                console.log('[uploads] Upload completed for blob:', blob.url);
 
                 const Payload = tokenPayload ? JSON.parse(tokenPayload) : null;
                 const userId = Payload?.userId;
@@ -44,7 +41,6 @@ export async function POST(request: Request): Promise<NextResponse> {
             },
         });
 
-        console.log('[uploads] handleUpload response:', response && typeof response === 'object' ? { ok: true } : response);
 
         return NextResponse.json(response);
     } catch (e) {

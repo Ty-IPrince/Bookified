@@ -7,6 +7,7 @@ import Book from "@/database/models/book.model";
 import BookSegment from "@/database/models/bookSegment.model";
 import mongoose from "mongoose";
 import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 
 
 export const getAllbooks = async()=>{
@@ -74,6 +75,7 @@ export const createbook = async (data: CreateBook) => {
 
         const book = await Book.create({ ...data, slug, totalSegments: 0 });
 
+        revalidatePath('/')
         return serializedata({
             success: true,
             data: serializedata(book),

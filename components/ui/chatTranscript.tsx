@@ -17,12 +17,16 @@ const ChatTranscript = ({
 }: TranscriptProps) => {
   const isEmpty = messages.length === 0 && !currentMessage && !currentUserMessage
 
+  useEffect(() => {
+  console.log(messages)
+  }, [messages])
+  
   if (isEmpty) {
     return (
       <div className="vapi-transcript-wrapper bg-white rounded-2xl p-12 shadow-soft-md min-h-[380px] flex items-center justify-center">
         <div className="text-center">
           <div className="mx-auto w-20 h-20 rounded-full bg-[var(--accent-light)] flex items-center justify-center shadow-soft mb-4">
-            <Mic className="size-12 text-[#212a3b] mb-4" />
+            <Mic className="size-12 text-[#212a3b] " />
           </div>
           <h2 className="text-2xl font-semibold mt-2">No conversation yet</h2>
           <p className="text-[var(--text-muted)] mt-2">Tap the mic to start</p>
