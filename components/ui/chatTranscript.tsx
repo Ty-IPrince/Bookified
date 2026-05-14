@@ -80,10 +80,3 @@ const ChatTranscript = ({
 }
 
 export default ChatTranscript
-/*
-wire the vapi eventlistuner . Use vapi hook to track converasation messages . listen for messege event type transcript and hendle in different use casea
-- the user partial , which update current user messege state with live transcript
-- the user final ,which is going to be transcript type of final, where we can clear the current user messege and setstatus to thinking and the messege to messege arrey
-- same thing for the assistance partial and final messege .
-Then duplicate final messegesbefoure appending and pass messeges,current messege add current messege nad current user messeges toto transcript componet so both streming and completed messeges reder in real time.
-*/

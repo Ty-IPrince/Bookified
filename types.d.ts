@@ -124,3 +124,11 @@ export interface StartSessionResult {
     maxDurationMinutes?: number;
     error?:string;
 }
+export type SubscriptionPlan = 'free' | 'standard' | 'pro';
+
+export interface PlanLimits {
+  maxBooks: number;
+  maxSessionsPerMonth: number;
+  maxSessionMinutes: number;
+  hasHistory: boolean;
+}

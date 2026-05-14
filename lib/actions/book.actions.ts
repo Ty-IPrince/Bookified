@@ -8,25 +8,34 @@ import BookSegment from "@/database/models/bookSegment.model";
 import mongoose from "mongoose";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { checkBookLimit } from '@/lib/billing.server';
+import { getUserBooksCount } from '@/database/queries';
 
+type CreateBookResult = {
+    success: boolean;
+    data: any;
+    alreadyExists: boolean;
+    error?: string;
+    message?: string;
+};
 
-export const getAllbooks = async()=>{
+export const getAllbooks = async () => {
     try {
         await connectToDatabase();
 
-        const {userId} = await auth();
+        const { userId } = await auth();
 
-        if(!userId){
-            return serializedata({ success: false, data : [],error: "Unauthorized" });
+        if (!userId) {
+            return serializedata({ success: false, data: [], error: "Unauthorized" });
         }
         const query = { clerkId: userId };
 
         const books = await Book.find(query).sort({ createdAt: -1 }).lean();
         return serializedata({ success: true, data: books.map(serializedata) });
-        
-    }catch(e){
+
+    } catch (e) {
         console.error("Error fetching books:", e);
-        return serializedata({ success: false, data : [],error: e });
+        return serializedata({ success: false, data: [], error: e });
     }
 }
 
@@ -51,14 +60,28 @@ export const checkBookExists = async (title: string) => {
         }
     } catch (e) {
         console.error("Error checking book exist:", e);
-        return serializedata({ exist: false, error: e , data: null});
+        return serializedata({ exist: false, error: e, data: null });
     }
 }
 
-export const createbook = async (data: CreateBook) => {
+export const createbook = async (data: CreateBook): Promise<CreateBookResult> => {
     try {
         await connectToDatabase();
 
+        const { userId } = await auth();
+        if (!userId) throw new Error('Unauthorized');
+
+        const limits = await checkBookLimit(userId);
+        console.log(limits)
+        if (limits.success === false) {
+            return ({
+                success: false,
+                data: null,
+                alreadyExists: false,
+                error: limits.message || "Book limit reached. Please upgrade your plan."
+            })
+        }
+            
         const slug = genrateslug(data.title);
 
         const existingBook = await Book.findOne({ slug }).lean();
@@ -71,9 +94,8 @@ export const createbook = async (data: CreateBook) => {
             })
         }
 
-        // Todo : check subscription limits before creating book
 
-        const book = await Book.create({ ...data, slug, totalSegments: 0 });
+        const book = await Book.create({ ...data, clerkId:userId ,slug, totalSegments: 0 });
 
         revalidatePath('/')
         return serializedata({
@@ -84,7 +106,7 @@ export const createbook = async (data: CreateBook) => {
 
     } catch (error) {
         console.error("Database connection error:", error);
-        return serializedata({ success: false, message: "Database connection failed" , alreadyExists : false , data: ''});
+        return serializedata({ success: false, message: "Database connection failed", alreadyExists: false, data: '' });
 
     }
 
@@ -125,10 +147,10 @@ export const saveBookSegments = async (bookId: string, clerkId: string, segments
 export const getbookbyslug = async (slug: string) => {
     try {
         await connectToDatabase();
-        const {userId} = await auth();
+        const { userId } = await auth();
 
-        if(!userId){
-            return serializedata({ success: false, data : [],error: "Unauthorized" });
+        if (!userId) {
+            return serializedata({ success: false, data: [], error: "Unauthorized" });
         }
         const query = { clerkId: userId };
 
@@ -136,13 +158,13 @@ export const getbookbyslug = async (slug: string) => {
         const book = await books.find((b) => b.slug === slug);
 
         if (!book) {
-            return serializedata({ success: false, error: "Book not found" ,data : '' });
+            return serializedata({ success: false, error: "Book not found", data: '' });
         }
 
         return { success: true, data: serializedata(book) };
     } catch (e) {
         console.error("Error fetching book by slug:", e);
-        return serializedata({ success: false, error: e ,data : ''});
+        return serializedata({ success: false, error: e, data: '' });
     }
 };
 
@@ -151,44 +173,46 @@ export const searchBookSegment = async (bookId: string, query: string, numSegmen
         await connectToDatabase();
 
         if (!bookId || !query) {
-            return serializedata({ success: false, error: 'Missing bookId or query' , data: [] });
+            return serializedata({ success: false, error: 'Missing bookId or query', data: [] });
         }
 
         const bookObjectId = new mongoose.Types.ObjectId(bookId);
 
-        let segments : Record<string, any>[] = [];
-        try{
-        segments = await BookSegment.find(
-            { bookId : bookObjectId, $text: { $search: query } },
-            { score: { $meta: 'textScore' }, content: 1 }
-        )
-        
-            .select('_id bookId content segmentIndex pageNumber wordCount')
-            .sort({ score: { $meta: 'textScore' } })
-            .limit(Number(numSegments) || 3)
-            .lean();
-    }catch(e){
-        segments = [];
-    }
+        let segments: Record<string, any>[] = [];
+        try {
+            segments = await BookSegment.find(
+                { bookId: bookObjectId, $text: { $search: query } },
+                { score: { $meta: 'textScore' }, content: 1 }
+            )
+
+                .select('_id bookId content segmentIndex pageNumber wordCount')
+                .sort({ score: { $meta: 'textScore' } })
+                .limit(Number(numSegments) || 3)
+                .lean();
+        } catch (e) {
+            segments = [];
+        }
         if (segments.length === 0) {
             const keywords = query.split(/\s+/).filter((k) => k.length > 2)
             const pattens = keywords.map(escapeRegex).join('|')
 
             segments = await BookSegment.find(
-            { bookId : bookObjectId,
-             content : { $regex: pattens , $options : 'i' } },
-        )
-        
-            .select('_id bookId content segmentIndex pageNumber wordCount')
-            .sort({segmentIndex : 1})
-            .limit(Number(numSegments) || 3)
-            .lean();   
+                {
+                    bookId: bookObjectId,
+                    content: { $regex: pattens, $options: 'i' }
+                },
+            )
+
+                .select('_id bookId content segmentIndex pageNumber wordCount')
+                .sort({ segmentIndex: 1 })
+                .limit(Number(numSegments) || 3)
+                .lean();
 
         }
-        
+
         console.log(`Search complete. Found ${segments.length} results`);
 
-        return serializedata({ success: true, data: segments});
+        return serializedata({ success: true, data: segments });
     } catch (e) {
         console.error('Error searching segments:', e);
         return {
