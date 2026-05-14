@@ -10,6 +10,7 @@ import { Show, UserButton, SignInButton, useUser } from '@clerk/nextjs'
 const navlist = [
   { header: "Library", href: "/" },
   { header: "Add New", href: "/books/new" },
+  { header: 'Pricing' , href: '/subscriptions'}
 ]
 const navbar = () => {
   const pathname = usePathname();

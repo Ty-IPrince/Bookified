@@ -87,7 +87,6 @@ const UploadForm = () => {
     }
     if (userId) {
       try {
-        console.log('Form submitted', data)
 
         const existCheck = await checkBookExists(data.title)
 
@@ -100,7 +99,6 @@ const UploadForm = () => {
 
         const filetitle = data.title.replace(/\s+/g, "-").toLowerCase();
         const pdfFile = data.pdfFile;
-
         const parsePDF = await parsePDFFile(pdfFile)
 
         if (parsePDF.content.length === 0) {
@@ -144,9 +142,11 @@ const UploadForm = () => {
           coverURL: coverUrl,
           fileSize: pdfFile.size,
         })
-
-        if(!book.success) throw new Error("Failed to create book record in database.");
-
+        console.log(book)
+        if(book.success === false) {
+          toast.error(book.error || "Failed to create book record in database.");
+          return;
+        }
         if(book.alreadyExists){
           toast.info("Book already exists.");
           reset();

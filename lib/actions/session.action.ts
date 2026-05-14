@@ -1,18 +1,29 @@
 'use server'
 
+import { auth } from '@clerk/nextjs/server'
 import VoiceSession from "@/database/models/voiceSession.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { StartSessionResult } from "@/types"
-import { getCurrentBillingPeriodStart } from "../subsciption-constants";
+import { getCurrentBillingPeriodStart } from "../subscription-constants";
+import { checkSessionLimit } from '@/lib/billing.server';
+import { getMonthlySessionCount } from '@/database/queries';
 
-export const startVoiceSession = async (clerkId : string , bookId : string) : Promise<StartSessionResult>=>{
+export const startVoiceSession = async (_clerkId : string , bookId : string) : Promise<StartSessionResult>=>{
     try{
         await connectToDatabase()
+        const { userId } = await auth();
+  if (!userId) throw new Error('Unauthorized');
 
-        // Limits/Plan to see wheater sesson is allowed
-        
+  const limits = await checkSessionLimit(userId);  
+    if (limits.success === false) {
+        return {
+            success: false,
+            error: limits.message || "Session limit reached. Please upgrade your plan."
+        }
+    }
+
         const session = await VoiceSession.create({
-            clerkId ,
+            clerkId: userId,
             bookId,
             startedAt : new Date(),
             billingPeriodStart : getCurrentBillingPeriodStart(),
@@ -22,7 +33,6 @@ export const startVoiceSession = async (clerkId : string , bookId : string) : Pr
         return{
             success : true,
             sessionId : session._id.toString(),
-            // maxDurationMinutes : check.maxDurationMinutes,
         }
     }catch(e){
         console.error('Error Starting Voice Session', e);
