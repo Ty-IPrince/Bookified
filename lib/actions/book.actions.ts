@@ -1,7 +1,7 @@
 'use server'
 
 import { connectToDatabase } from "@/database/mongoose";
-import { CreateBook, TextSegment } from "@/types";
+import { CreateBook, TextSegment, IBook } from "@/types";
 import { escapeRegex, genrateslug, serializedata } from "@/lib/utils";
 import Book from "@/database/models/book.model";
 import BookSegment from "@/database/models/bookSegment.model";
@@ -9,17 +9,22 @@ import mongoose from "mongoose";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { checkBookLimit } from '@/lib/billing.server';
-import { getUserBooksCount } from '@/database/queries';
 
 type CreateBookResult = {
     success: boolean;
-    data: any;
+    data: Partial<IBook> | Record<string, unknown>;
     alreadyExists: boolean;
     error?: string;
     message?: string;
 };
 
-export const getAllbooks = async () => {
+type GetAllBooksResult = {
+    success: boolean;
+    data: Partial<IBook>[];
+    error?: string | unknown;
+};
+
+export const getAllbooks = async (): Promise<GetAllBooksResult> => {
     try {
         await connectToDatabase();
 
@@ -30,7 +35,7 @@ export const getAllbooks = async () => {
         }
         const query = { clerkId: userId };
 
-        const books = await Book.find(query).sort({ createdAt: -1 }).lean();
+        const books = await Book.find(query).sort({ createdAt: -1 }).lean() as Partial<IBook>[];
         return serializedata({ success: true, data: books.map(serializedata) });
 
     } catch (e) {
@@ -39,7 +44,13 @@ export const getAllbooks = async () => {
     }
 }
 
-export const checkBookExists = async (title: string) => {
+type CheckBookExistsResult = {
+    exist: boolean;
+    data: Partial<IBook> | null;
+    error?: unknown;
+};
+
+export const checkBookExists = async (title: string): Promise<CheckBookExistsResult> => {
     try {
         await connectToDatabase();
 
@@ -76,7 +87,7 @@ export const createbook = async (data: CreateBook): Promise<CreateBookResult> =>
         if (limits.success === false) {
             return ({
                 success: false,
-                data: null,
+                data: {},
                 alreadyExists: false,
                 error: limits.message || "Book limit reached. Please upgrade your plan."
             })
@@ -106,7 +117,7 @@ export const createbook = async (data: CreateBook): Promise<CreateBookResult> =>
 
     } catch (error) {
         console.error("Database connection error:", error);
-        return serializedata({ success: false, message: "Database connection failed", alreadyExists: false, data: '' });
+        return serializedata({ success: false, message: "Database connection failed", alreadyExists: false, data: {} });
 
     }
 
@@ -123,7 +134,7 @@ export const saveBookSegments = async (bookId: string, clerkId: string, segments
             bookId,
             content: segment.text,
             segmentIndex: segment.segmentIndex,
-            pageNumber: (segment as any).pageNumber,
+            pageNumber: segment.pageNumber,
             wordCount: segment.wordCount,
         }));
 
@@ -178,7 +189,7 @@ export const searchBookSegment = async (bookId: string, query: string, numSegmen
 
         const bookObjectId = new mongoose.Types.ObjectId(bookId);
 
-        let segments: Record<string, any>[] = [];
+        let segments: Record<string, string | number>[] = [];
         try {
             segments = await BookSegment.find(
                 { bookId: bookObjectId, $text: { $search: query } },
@@ -189,7 +200,8 @@ export const searchBookSegment = async (bookId: string, query: string, numSegmen
                 .sort({ score: { $meta: 'textScore' } })
                 .limit(Number(numSegments) || 3)
                 .lean();
-        } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_e) {
             segments = [];
         }
         if (segments.length === 0) {
@@ -213,11 +225,12 @@ export const searchBookSegment = async (bookId: string, query: string, numSegmen
         console.log(`Search complete. Found ${segments.length} results`);
 
         return serializedata({ success: true, data: segments });
-    } catch (e) {
-        console.error('Error searching segments:', e);
+    } catch (_e) {
+        console.error('Error searching segments:', _e);
+        const errorMessage = _e instanceof Error ? _e.message : 'Unknown error';
         return {
             success: false,
-            error: (e as Error).message,
+            error: errorMessage,
             data: [],
         };
     }

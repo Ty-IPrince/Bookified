@@ -6,7 +6,6 @@ import { connectToDatabase } from "@/database/mongoose";
 import { StartSessionResult } from "@/types"
 import { getCurrentBillingPeriodStart } from "../subscription-constants";
 import { checkSessionLimit } from '@/lib/billing.server';
-import { getMonthlySessionCount } from '@/database/queries';
 
 export const startVoiceSession = async (_clerkId : string , bookId : string) : Promise<StartSessionResult>=>{
     try{

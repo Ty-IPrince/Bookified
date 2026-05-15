@@ -1,19 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { debounce } from '@/lib/utils';
 import { Search } from 'lucide-react';
-
-interface Book {
-  _id: string;
-  title: string;
-  author: string;
-  slug: string;
-  coverURL?: string;
-}
+import { IBook } from '@/types';
 
 interface BookSearchProps {
-  onSearchResults: (books: Book[]) => void;
+  onSearchResults: (books: Partial<IBook>[]) => void;
   onClearSearch: () => void;
 }
 
@@ -22,8 +15,8 @@ export default function BookSearch({ onSearchResults, onClearSearch }: BookSearc
   const [isLoading, setIsLoading] = useState(false);
 
   // Debounced search function
-  const performSearch = useCallback(
-    debounce(async (searchQuery: string) => {
+  const performSearch = useMemo(
+    () => debounce(async (searchQuery: string) => {
       if (!searchQuery.trim()) {
         onClearSearch();
         return;

@@ -12,7 +12,7 @@ const navlist = [
   { header: "Add New", href: "/books/new" },
   { header: 'Pricing' , href: '/subscriptions'}
 ]
-const navbar = () => {
+const Navbar = () => {
   const pathname = usePathname();
   const { user } = useUser();
 
@@ -56,4 +56,4 @@ const navbar = () => {
   )
 }
 
-export default navbar
+export default Navbar

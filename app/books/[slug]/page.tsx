@@ -39,7 +39,7 @@ export default async function Page({ params }: Props) {
     );
   }
   
-    const book: any = res.data;
+    const book = res.data as typeof res.data;
 
   return (
    <VapiControls book={book}/>

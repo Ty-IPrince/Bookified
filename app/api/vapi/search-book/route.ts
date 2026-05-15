@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { searchBookSegment } from "@/lib/actions/book.actions";
+import { auth } from "@clerk/nextjs/server";
 
 async function processBookSearch(bookId: unknown, query: unknown) {
+  const { userId } = await auth();
+  if (!userId) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
   if (bookId == null || query == null || query === '') {
     return { success: false, error: 'Missing bookId or query' };
   }
@@ -37,6 +43,11 @@ function parseArgs(args: unknown): Record<string, unknown> {
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
+      const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
     const body = await request.json();
 
 

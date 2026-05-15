@@ -1,6 +1,7 @@
 import { bookcardprops } from '@/types'
 import Link from "next/link"
 import React from 'react'
+import Image from 'next/image'
 
 const BookCard = ({ title, coverURL, author, slug }: bookcardprops) => {
     return (
@@ -8,7 +9,7 @@ const BookCard = ({ title, coverURL, author, slug }: bookcardprops) => {
             <article className='book-card'>
                 <figure className='book-card-figure'>
                     <div className='book-card-cover-wrapper'>
-                        <img src={coverURL} alt={title} height={200} width={133} />
+                        <Image src={coverURL} alt={title} width={133} height={200} className=' object-cover' />
                     </div>
 
                     <figcaption className='book-card-meta'>

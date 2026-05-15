@@ -1,5 +1,5 @@
 import { IVoiceSession } from "@/types";
-import mongoose, { Schema, models, model } from "mongoose";
+import { Schema, models, model } from "mongoose";
 
 
 const voiceSessionSchema = new Schema<IVoiceSession>({
