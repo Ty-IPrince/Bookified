@@ -17,7 +17,8 @@ export async function POST(request: Request): Promise<NextResponse> {
                 try {
                     const authRes = await auth();
                     userId = authRes.userId ?? null;
-                } catch (err) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                } catch (_err) {
                     userId = null;
                 }
 
@@ -32,11 +33,7 @@ export async function POST(request: Request): Promise<NextResponse> {
                     tokenPayload: JSON.stringify({ userId }),
                 };
             },
-            onUploadCompleted: async ({ blob, tokenPayload }) => {
-
-                const Payload = tokenPayload ? JSON.parse(tokenPayload) : null;
-                const userId = Payload?.userId;
-
+            onUploadCompleted: async () => {
                 //Todo : PostHog
             },
         });
@@ -45,9 +42,9 @@ export async function POST(request: Request): Promise<NextResponse> {
         return NextResponse.json(response);
     } catch (e) {
         console.error('[uploads] handleUpload error:', e);
-        let message = e instanceof Error ? e.message : 'An error occurred during file upload.';
-        let status = message.includes('Unauthorized') ? 401 : 500;
-        let clintmessage = status === 401 ? 'Unauthorized' : 'Upload failed';
+        const message = e instanceof Error ? e.message : 'An error occurred during file upload.';
+        const status = message.includes('Unauthorized') ? 401 : 500;
+        const clintmessage = status === 401 ? 'Unauthorized' : 'Upload failed';
         return NextResponse.json({ error: clintmessage }, { status });
     }
 }

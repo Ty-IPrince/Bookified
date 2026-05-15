@@ -37,7 +37,7 @@ export const useVapi = (book: IBook) => {
   const [messages, setmessages] = useState<Messages[]>([]);
   const [currentMessage, setcurrentMessage] = useState('');      // Assistant streaming
   const [currentUserMessage, setcurrentUserMessage] = useState(''); // User streaming
-  const [isActive, setisActive] = useState<boolean>(false)
+  const isActive = status !== 'idle';
   const [duration, setduration] = useState<number>(0);
   const [maxDuration, setmaxDuration] = useState<number>(0);
   const [limiterror, setlimiterror] = useState<string | null>(null);
@@ -48,15 +48,34 @@ export const useVapi = (book: IBook) => {
   const startTimeRef = useRef<number | null>(null);
   const maxDurationRef = useRef<number>(0);
 
+ 
   const bookRef = useLatestRef(book);
+
   const durationRef = useLatestRef(duration);
+
   const maxDurationRefLatest = useLatestRef(maxDuration);
 
   const voice = book.persona ? book.persona : DEFAULT_VOICE;
 
+  type VapiEventMessage = {
+    type: string;
+    role: 'user' | 'assistant';
+    transcriptType: 'partial' | 'final';
+    transcript: string;
+  };
+
+  type VapiEventHandlers = {
+    'call-start': () => void;
+    'call-end': () => void;
+    'speech-start': () => void;
+    'speech-end': () => void;
+    message: (msg: VapiEventMessage) => void;
+    error: (err: Record<string, unknown>) => void;
+  };
+
   // === VAPI EVENT LISTENERS ===
   useEffect(() => {
-    const handlers = {
+    const handlers: VapiEventHandlers = {
       'call-start': () => {
         isStoppingRef.current = false;
         setstatus('starting');
@@ -142,7 +161,7 @@ export const useVapi = (book: IBook) => {
         }
       },
 
-      error: (err: any) => {
+      error: (err: Record<string , unknown>) => {
         console.error(err);
         setstatus('idle');
         setcurrentMessage('');
@@ -154,15 +173,16 @@ export const useVapi = (book: IBook) => {
 
     const client = getVapi();
     Object.entries(handlers).forEach(([event, handler]) => {
-      client.on(event as any, handler);
+      client.on(event as keyof VapiEventHandlers, handler as (...args: unknown[]) => void);
     });
 
     return () => {
       Object.entries(handlers).forEach(([event, handler]) => {
-        client.off(event as any, handler);
+        client.off(event as keyof VapiEventHandlers, handler as (...args: unknown[]) => void);
       });
       if (timerRef.current) clearInterval(timerRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const start = useCallback(async () => {

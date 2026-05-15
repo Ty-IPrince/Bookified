@@ -1,16 +1,15 @@
 "use client"
 
 import * as React from 'react'
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { UploadCloud, ImageIcon } from 'lucide-react'
-import { voiceOptions as VOICE_OPTIONS_CONST, voiceCategories, DEFAULT_VOICE } from '@/lib/constants'
+import { voiceOptions as VOICE_OPTIONS_CONST, voiceCategories } from '@/lib/constants'
 import { Button } from './button'
 import { uploadSchema } from '@/lib/zod'
 import { toast } from 'sonner'
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { checkBookExists, createbook, saveBookSegments } from '@/lib/actions/book.actions'
 import { useRouter } from 'next/navigation'
 import { parsePDFFile } from '@/lib/utils'
@@ -50,7 +49,7 @@ const UploadForm = () => {
     watch,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<UploadFormInput, any, UploadFormOutput>({
+  } = useForm<UploadFormInput, Record<string, unknown>, UploadFormOutput>({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
       title: '',
@@ -151,6 +150,11 @@ const UploadForm = () => {
           toast.info("Book already exists.");
           reset();
           router.push(`/books/${book.data.slug}`);
+          return;
+        }
+
+        if (!book.data._id || typeof book.data._id !== 'string') {
+          toast.error("Failed to create book record. Please try again.");
           return;
         }
 

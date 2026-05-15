@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect } from 'react'
+import Image from 'next/image'
 import { IBook } from '@/types'
 import { Mic, MicOff } from "lucide-react";
 import ChatTranscript from '@/components/ui/chatTranscript'
@@ -74,9 +75,11 @@ const VapiControls = ({ book }: { book: IBook }) => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
             {/* Cover Image and Mic Button */}
             <div className="relative w-[120px] h-[170px] sm:w-[140px] sm:h-[200px] flex-shrink-0">
-              <img
+              <Image
                 src={cover}
                 alt={book.title}
+                width={140}
+                height={200}
                 className="w-full h-full object-cover rounded-lg shadow-soft"
               />
 

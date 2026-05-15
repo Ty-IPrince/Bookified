@@ -3,24 +3,17 @@
 import { useState } from 'react';
 import BookSearch from './bookSearch';
 import BookCard from './bookCard';
-
-interface Book {
-  _id: string;
-  title: string;
-  author: string;
-  slug: string;
-  coverURL?: string;
-}
+import { IBook } from '@/types';
 
 interface HomePageClientProps {
-  initialBooks: Book[];
+  initialBooks: Partial<IBook>[];
 }
 
 export default function HomePageClient({ initialBooks }: HomePageClientProps) {
-  const [searchResults, setSearchResults] = useState<Book[] | null>(null);
-  const [displayBooks, setDisplayBooks] = useState<Book[]>(initialBooks);
+  const [searchResults, setSearchResults] = useState<Partial<IBook>[] | null>(null);
+  const [displayBooks, setDisplayBooks] = useState<Partial<IBook>[]>(initialBooks);
 
-  const handleSearchResults = (books: Book[]) => {
+  const handleSearchResults = (books: Partial<IBook>[]) => {
     setSearchResults(books);
     setDisplayBooks(books);
   };
@@ -40,15 +33,17 @@ export default function HomePageClient({ initialBooks }: HomePageClientProps) {
       </div>
       <div className='library-books-grid w-full'>
         {displayBooks.length > 0 ? (
-          displayBooks.map((book) => (
-            <BookCard
-              key={book._id}
-              title={book.title}
-              author={book.author}
-              coverURL={book.coverURL ?? ''}
-              slug={book.slug}
-            />
-          ))
+          displayBooks
+            .filter((book) => book.title && book.author && book.slug)
+            .map((book) => (
+              <BookCard
+                key={book._id}
+                title={book.title!}
+                author={book.author!}
+                coverURL={book.coverURL ?? ''}
+                slug={book.slug!}
+              />
+            ))
         ) : (
           <p className='text-gray-500 col-span-full text-center py-8'>
             {searchResults !== null ? 'No books found matching your search.' : 'No books available.'}

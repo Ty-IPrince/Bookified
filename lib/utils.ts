@@ -90,7 +90,7 @@ export const parsePDFFile = async (file : File)=> {
       canvas,
       canvasContext: context,
       viewport: viewPort,
-    } as any;
+    } as Parameters<typeof firstpage.render>[0];
 
     await firstpage.render(renderContext).promise;
 
@@ -100,7 +100,7 @@ export const parsePDFFile = async (file : File)=> {
     for(let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++){
       const page = await pdfDocument.getPage(pageNum);
       const textContent = await page.getTextContent();
-      const pageText = textContent.items.filter((item)=> 'str' in item).map((item : any) => item.str).join(' ');
+      const pageText = textContent.items.filter((item)=> 'str' in item).map((item: { str: string }) => item.str).join(' ');
 
       fullText += pageText + '\n';
     }
@@ -139,7 +139,7 @@ export const formatDuration = (seconds: number): string => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: Parameters<T>) => ReturnType<T>>(
   func: T,
   delay: number
 ): ((...args: Parameters<T>) => void) => {
